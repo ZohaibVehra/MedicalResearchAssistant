@@ -62,8 +62,13 @@ const getTripleResults = async ({ rawQuery, freeOnly = false, max = 100 }) => {
     relevanceRes.total || Infinity,
     mostCitedRes.total || Infinity
   )
-  const total = Number.isFinite(reportedTotal) ? reportedTotal : Math.min(max, latest.length, relevant.length, mostCited.length)
+  const totals = [latestRes.total, relevanceRes.total, mostCitedRes.total]
+  .map(n => Number(n))
+  .filter(n => Number.isFinite(n) && n >= 0)
 
+  const total = totals.length ? Math.min(max, ...totals) : 0
+  console.log(latest[0])
+  console.log(latest)
   return { total, latest, relevant, mostCited }
 }
 

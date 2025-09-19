@@ -13,37 +13,65 @@ const getTokenFrom = request => {
   return null
 }
 
-searchesRouter.post('/', async (request, response) => {
-  let { rawQuery, freeOnly, max=100} = request.body
-  rawQuery = String(rawQuery || '').trim()
+searchesRouter.post('/', async (request, response, next) => {
+  try {
+    let { rawQuery, freeOnly, max = 100 } = request.body
+    rawQuery = String(rawQuery || '').trim()
     if (!rawQuery) return response.status(400).json({ error: 'rawQuery is required' })
 
-  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
-  if(!decodedToken.id){
-    return response.status(401).json({ error: 'invalid token' })
+    //authentication is optional, but data will only be saved for logged in users
+    let user = null
+    const token = getTokenFrom(request)
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.SECRET)
+        if (decoded?.id) user = await User.findById(decoded.id)
+      } catch (_) {
+        //ignore any errors with validation. we just wont save results in this case
+      }
+    }
+
+    const { total, latest, relevant, mostCited } = await searchService.getTripleResults({ rawQuery, freeOnly, max })
+
+    //check if valid user found, if so then we can save results
+    if (user) {
+      const search = new Search({
+        rawQuery,
+        total,
+        latest,
+        relevant,
+        mostCited,
+        user: user._id
+      })
+      const savedSearch = await search.save()
+      user.searches = user.searches.concat(savedSearch._id)
+      await user.save()
+
+      return response.status(201).json({
+        saved: true,
+        searchId: savedSearch._id,
+        rawQuery,
+        total,
+        latest,
+        relevant,
+        mostCited
+      })
+    }
+
+    //if not logged in then return result but dont save
+    return response.status(200).json({
+      saved: false,
+      rawQuery,
+      total,
+      latest,
+      relevant,
+      mostCited
+    })
+  } catch (err) {
+    next(err)
   }
-
-  //if token was valid find the user
-  const user = await User.findById(decodedToken.id)
-  if(!user) return response.status(400).json({ error: 'userId missing or not valid' })
-  
-  const { total, latest, relevant, mostCited } = await searchService.getTripleResults({ rawQuery, freeOnly, max })
-
-
-  const search = new Search({
-    rawQuery,
-    total,
-    latest,
-    relevant, 
-    mostCited,
-    user: user._id
-  })
-
-  const savedSearch = await search.save()
-  user.searches = user.searches.concat(savedSearch._id)
-  await user.save()
-  response.status(201).json(savedSearch)
 })
+
 
 searchesRouter.get('/', async (request, response) => {
   const searches = await Search.find({}).populate('user', { username: 1 })
