@@ -9,7 +9,7 @@ const loginRouter = require('./controllers/login')
 
 const app = express()
 
-logger.info('connecting to', config.DBURL)
+logger.info('connecting to MongoDB')
 
 
 //connect to database and log any errors connecting

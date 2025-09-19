@@ -2,7 +2,7 @@ const searchesRouter = require('express').Router()
 const Search = require('../models/search')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
-
+const searchService = require('../services/searchService')
 
 //extract token
 const getTokenFrom = request => {
@@ -14,7 +14,9 @@ const getTokenFrom = request => {
 }
 
 searchesRouter.post('/', async (request, response) => {
-  const { idkyet } = request.body
+  let { rawQuery, freeOnly, max=100} = request.body
+  rawQuery = String(rawQuery || '').trim()
+    if (!rawQuery) return response.status(400).json({ error: 'rawQuery is required' })
 
   const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
   if(!decodedToken.id){
@@ -24,9 +26,16 @@ searchesRouter.post('/', async (request, response) => {
   //if token was valid find the user
   const user = await User.findById(decodedToken.id)
   if(!user) return response.status(400).json({ error: 'userId missing or not valid' })
+  
+  const { total, latest, relevant, mostCited } = await searchService.getTripleResults({ rawQuery, freeOnly, max })
+
 
   const search = new Search({
-    idkyet,
+    rawQuery,
+    total,
+    latest,
+    relevant, 
+    mostCited,
     user: user._id
   })
 
