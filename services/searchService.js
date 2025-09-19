@@ -15,12 +15,31 @@ const fetchBatch = async ({ rawQuery, sort, freeOnly = false, max = 100 }) => {
   const encodedQuery = buildQuery(rawQuery, sort, freeOnly)
   const pageSize = Math.min(max, 100)
   const url = `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodedQuery}&format=json&pageSize=${pageSize}&page=1`
+  let attempt = 0
+  let lastError
+  //try 3 times if no results, sometimes api is weird and returns nothing
+  while (attempt < 3) {
+    try {
+      const { data } = await axios.get(url, { timeout: 8000 })
+      const total = Number(data.hitCount || 0)
+      const items = data.resultList?.result ?? []
 
-  const { data } = await axios.get(url, { timeout: 8000 })
-  const total = Number(data.hitCount || 0)
-  const items = data.resultList?.result ?? []
-  return { total, items }
+      if (items.length > 0 || total === 0) {
+        return { total, items }
+      }
+      //if no hits we try again due to finiky api
+      console.warn(`Empty items on attempt ${attempt + 1}, retrying...`)
+    } catch (err) {
+      lastError = err
+      console.warn(`Request failed on attempt ${attempt + 1}:`, err.message)
+    }
+    attempt++
+  }
+  // after 3 failed attempts we just return em,pty if nothing
+  if (lastError) throw lastError
+  return { total: 0, items: [] }
 }
+
 
 //cleans up results format
 const cleanItems = items =>
