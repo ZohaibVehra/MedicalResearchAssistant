@@ -6,6 +6,7 @@ const middleware = require('./utils/middleware')
 const searchesRouter = require('./controllers/searches')
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
+const aiRouter = require('./controllers/ai')
 
 const app = express()
 
@@ -30,6 +31,7 @@ app.use(middleware.requestLogger)
 app.use('/api/searches', searchesRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
+app.use('/api/ai', aiRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)

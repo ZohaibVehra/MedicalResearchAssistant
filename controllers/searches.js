@@ -72,6 +72,23 @@ searchesRouter.post('/', async (request, response, next) => {
   }
 })
 
+searchesRouter.get('/user/my-searches', async (req, res, next) => {
+  try {
+    const token = getTokenFrom(req)
+    const decoded = jwt.verify(token, process.env.SECRET)
+    if (!decoded?.id) return res.status(401).json({ error: 'invalid token' })
+
+    const searches = await Search.find({ user: decoded.id })
+      .sort({ createdAt: -1 }) //sorts by recent searches
+      .limit(20) //will only return the last 20 searches ofa user
+      .lean()
+
+    res.json({ count: searches.length, searches })
+  } catch (err) {
+    next(err)
+  }
+})
+
 
 searchesRouter.get('/', async (request, response) => {
   const searches = await Search.find({}).populate('user', { username: 1 })

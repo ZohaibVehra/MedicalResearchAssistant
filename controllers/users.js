@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const usersRouter = require('express').Router()
 const User = require('../models/user')
+const jwt = require('jsonwebtoken')
 
 usersRouter.post('/', async (request, response) => {
   const { username, password } = request.body
@@ -17,8 +18,44 @@ usersRouter.post('/', async (request, response) => {
 })
 
 usersRouter.get('/', async (request, response) => {
-  const users = await User.find({}).populate('searches', { idkyet: 1 })
+  const users = await User.find({}).populate('searches', { rawQuery: 1 })
   response.json(users)
 })
 
+usersRouter.get('/:id', async (request, response) => {
+  const users = await User.find({}).populate('searches', { rawQuery: 1 })
+  response.json(users)
+})
+
+//extract token
+const getTokenFrom = request => {
+  const authorization = request.get('authorization')
+  if (authorization && authorization.startsWith('Bearer ')){
+    return authorization.replace('Bearer ', '')
+  }
+  return null
+}
+
+usersRouter.get('/user/my-searches', async (req, res, next) => {
+  try {
+    const token = getTokenFrom(req)
+    const decoded = jwt.verify(token, process.env.SECRET)
+    if (!decoded?.id) {
+      return res.status(401).json({ error: 'invalid token' })
+    }
+
+    const user = await User.findById(decoded.id)
+      .populate('searches', { rawQuery: 1 })
+
+    if (!user) {
+      return res.status(404).json({ error: 'user not found' })
+    }
+
+    res.json(user)
+  } catch (err) {
+    next(err)
+  }
+})
+
 module.exports = usersRouter
+
