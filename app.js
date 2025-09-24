@@ -7,6 +7,7 @@ const searchesRouter = require('./controllers/searches')
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
 const aiRouter = require('./controllers/ai')
+const path = require('path')
 
 const app = express()
 
@@ -32,6 +33,11 @@ app.use('/api/searches', searchesRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
 app.use('/api/ai', aiRouter)
+
+app.get('/health', (_req, res) => res.send('ok'))
+app.get('*', (_req, res) => {
+  res.sendFile(path.resolve(__dirname, 'dist', 'index.html'))
+})
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
