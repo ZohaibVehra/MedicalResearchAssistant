@@ -35,8 +35,12 @@ app.use('/api/login', loginRouter)
 app.use('/api/ai', aiRouter)
 
 app.get('/health', (_req, res) => res.send('ok'))
-app.get('*', (_req, res) => {
-  res.sendFile(path.resolve(__dirname, 'dist', 'index.html'))
+app.use((req, res, next) => {
+  // only handle GETs that aren't /api and aren’t files already served
+  if (req.method === 'GET' && !req.path.startsWith('/api')) {
+    return res.sendFile(path.resolve(__dirname, 'dist', 'index.html'))
+  }
+  next()
 })
 
 app.use(middleware.unknownEndpoint)
