@@ -34,7 +34,7 @@ searchesRouter.post('/', async (request, response, next) => {
     const { total, latest, relevant, mostCited } = await searchService.getTripleResults({ rawQuery, freeOnly, max })
 
     //check if valid user found, if so then we can save results
-    if (user) {
+    if (user && total > 0) {
       const search = new Search({
         rawQuery,
         total,
@@ -58,7 +58,7 @@ searchesRouter.post('/', async (request, response, next) => {
       })
     }
 
-    //if not logged in then return result but dont save
+    //if not logged in or no results then return result but dont save
     return response.status(200).json({
       saved: false,
       rawQuery,
