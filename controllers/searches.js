@@ -15,7 +15,7 @@ const getTokenFrom = request => {
 
 searchesRouter.post('/', async (request, response, next) => {
   try {
-    let { rawQuery, freeOnly, max = 100 } = request.body
+    let { rawQuery, freeOnly, max = 50 } = request.body
     rawQuery = String(rawQuery || '').trim()
     if (!rawQuery) return response.status(400).json({ error: 'rawQuery is required' })
 
