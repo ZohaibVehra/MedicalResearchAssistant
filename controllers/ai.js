@@ -9,13 +9,12 @@ aiRouter.post('/queryrephrase', async (request, response) => {
 
   const resp = await client.responses.create({
       model: 'gpt-4o-mini',
+      temperature: 0.3,
       input: [
         { role: 'system', content: base },
         { role: 'user', content: `Current query: "${query}"` }
       ]
     })
-
-  console.log(resp)
   
   const text = (resp.output_text || '[]')
   .replace(/```json|```/g, '')
@@ -40,6 +39,7 @@ aiRouter.post('/querygenerate', async (request, response) => {
 
   const resp = await client.responses.create({
     model: 'gpt-4o-mini',
+    temperature: 0.3,
     input: [
       { role: 'system', content: base },
       { role: 'user', content: `Topic: "${topic}"` }
