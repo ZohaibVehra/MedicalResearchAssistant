@@ -8,18 +8,28 @@ aiRouter.post('/queryrephrase', async (request, response) => {
   const base = 'You are a biomedical-search-query assistant for Europe PMC. Return 5 improved or related queries as a JSON array of strings. Prefer quoted phrases, AND/OR, synonyms where helpful.'
 
   const resp = await client.responses.create({
-      model: 'gpt-5-nano',
+      model: 'gpt-4o-mini',
       input: [
         { role: 'system', content: base },
         { role: 'user', content: `Current query: "${query}"` }
       ]
     })
+
+  console.log(resp)
   
-  const text = resp.output_text || '[]'
+  const text = (resp.output_text || '[]')
+  .replace(/```json|```/g, '')
+  .trim()
+
   let suggestions
-  try { suggestions = JSON.parse(text) }
-  catch { suggestions = text.split('\n').map(s => s.trim()).filter(Boolean) } //filter boolean removes empty strings
+  try {
+    suggestions = JSON.parse(text)
+  } catch {
+    suggestions = []
+  }
+
   response.json({ suggestions })
+
 })
 
 aiRouter.post('/querygenerate', async (request, response) => {
@@ -29,17 +39,23 @@ aiRouter.post('/querygenerate', async (request, response) => {
   const base = 'You are a biomedical-search-query assistant for Europe PMC. Given a topic or info on what the user needs, generate 5 diverse, precise queries (as a JSON array of strings) that would help retrieve relevant research articles. Prefer quoted phrases, AND/OR, synonyms where helpful.'
 
   const resp = await client.responses.create({
-    model: 'gpt-5-nano',
+    model: 'gpt-4o-mini',
     input: [
       { role: 'system', content: base },
       { role: 'user', content: `Topic: "${topic}"` }
     ]
   })
 
-  const text = resp.output_text || '[]'
+  const text = (resp.output_text || '[]')
+  .replace(/```json|```/g, '')
+  .trim()
+
   let suggestions
-  try { suggestions = JSON.parse(text) }
-  catch { suggestions = text.split('\n').map(s => s.trim()).filter(Boolean) }
+  try {
+    suggestions = JSON.parse(text)
+  } catch {
+    suggestions = []
+  }
 
   response.json({ suggestions })
 })
