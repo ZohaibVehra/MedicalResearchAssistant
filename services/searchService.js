@@ -86,8 +86,6 @@ const getTripleResults = async ({ rawQuery, freeOnly = false, max = 100 }) => {
   .filter(n => Number.isFinite(n) && n >= 0)
 
   const total = totals.length ? Math.min(max, ...totals) : 0
-  console.log(latest[0])
-  console.log(latest)
   return { total, latest, relevant, mostCited }
 }
 
@@ -99,10 +97,6 @@ if (require.main === module) {
       freeOnly: true,
       max: 100
     })
-    console.log('total:', res.total)
-    console.log('latest[0]:', res.latest[0])
-    console.log('relevant[0]:', res.relevant[0])
-    console.log('mostCited[0]:', res.mostCited[0])
   })().catch(e => {
     console.error(e)
     process.exit(1)
