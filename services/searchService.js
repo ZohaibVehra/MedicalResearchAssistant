@@ -96,4 +96,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { getTripleResults, buildQuery }
+module.exports = { getTripleResults }
