@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const searchSchema = new mongoose.Schema({
   rawQuery: { type: String, required: true, index: true },
-  total: { type: Number, required: true }, //note capped to always be 100 or less by service
+  total: { type: Number, required: true }, //note capped to always be 50 or less by service
 
   latest: {
     type: [{
